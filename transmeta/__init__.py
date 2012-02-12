@@ -4,8 +4,9 @@ from django.db import models
 from django.db.models.fields import NOT_PROVIDED
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.forms.forms import pretty_name
 from django.utils.datastructures import SortedDict
-from django.utils.translation import get_language
+from django.utils.translation import get_language, to_locale
 from django.utils.functional import lazy
 
 LANGUAGE_CODE = 0
@@ -18,8 +19,13 @@ def get_languages():
 
 def get_real_fieldname(field, lang=None):
     if lang is None:
-       lang = get_language().split('-')[0] # both 'en-US' and 'en' -> 'en'
+        lang = to_locale(get_language()) # both 'en-US' and 'en' -> 'en'
     return str('%s_%s' % (field, lang))
+
+
+def get_field_verbose_name(fieldname, field, lang=None):
+    verbose_name = field.verbose_name or pretty_name(unicode(fieldname))
+    return verbose_name + ' ' + dict(settings.LANGUAGES)[lang]
 
 
 def get_field_language(real_field):
@@ -67,11 +73,11 @@ def default_value(field):
 
     def default_value_func(self):
         attname = lambda x: get_real_fieldname(field, x)
-
-        if getattr(self, attname(get_language()), None):
-            result = getattr(self, attname(get_language()))
-        elif getattr(self, attname(get_language()[:2]), None):
-            result = getattr(self, attname(get_language()[:2]))
+        locale = to_locale(get_language())
+        if getattr(self, attname(locale), None):
+            result = getattr(self, attname(locale))
+        elif getattr(self, attname(locale[:2]), None):
+            result = getattr(self, attname(locale[:2]))
         else:
             default_language = fallback_language()
             result = getattr(self, attname(default_language), None)
@@ -141,8 +147,7 @@ class TransMeta(models.base.ModelBase):
                         lang_attr.null = True
                     if not lang_attr.blank:
                         lang_attr.blank = True
-                if hasattr(lang_attr, 'verbose_name'):
-                    lang_attr.verbose_name = LazyString(lang_attr.verbose_name, lang_code)
+                lang_attr.verbose_name = get_field_verbose_name(field, lang_attr, lang_code)
                 attrs[lang_attr_name] = lang_attr
             del attrs[field]
             attrs[field] = property(default_value(field))
