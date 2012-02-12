@@ -1,0 +1,44 @@
+0.6.6 (2012-02-06)
+------------------
+
+- Improvements and usability in the command sync_transmeta_db
+- Fix some bugs
+- Documentation
+
+
+0.6.5 (2012-01-13)
+------------------
+
+- Improvements and usability in the command sync_transmeta_db
+- Works with the last django (the command sync_transmeta_db)
+- Works with mysql (the command sync_transmeta_db)
+
+
+0.6.4 (2011-11-29)
+------------------
+
+- Fixes error with inheritance in models.
+
+0.6.3 (2011-11-29)
+------------------
+
+- Allow to use a TRANSMETA_LANGUAGES settings.
+- Added two options to sync_transmeta_db: -y (assume yes on all) and -d (default language code)
+
+
+0.6.2 (2011-03-22)
+------------------
+
+- works when default locale have spelling variants as es-ES or en-US.
+
+
+0.6.1 (2011-03-17)
+------------------
+
+- get_all_translatable_fields does not returned the correct tuple. Problems with inheritance.
+
+0.6.0 (2011-02-24)
+------------------
+
+- Make compatible with Django 1.2 and 1.3 when using ugettext_lazy in models verbose_name, fixing a hidden bug also for Django 1.1
+
