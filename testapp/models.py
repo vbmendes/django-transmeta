@@ -12,3 +12,8 @@ class TestModel(models.Model):
 
     class Meta:
         translate = ('i18n_field',)
+
+
+class InheritedTestModel(TestModel):
+
+    noni18n_field = models.CharField(max_length=255)

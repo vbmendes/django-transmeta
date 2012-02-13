@@ -47,6 +47,9 @@ def fallback_language():
     return getattr(settings, 'TRANSMETA_DEFAULT_LANGUAGE', \
                    settings.LANGUAGE_CODE)
 
+def fallback_locale():
+    return to_locale(fallback_language())
+
 
 def get_all_translatable_fields(model, model_trans_fields=None, column_in_current_table=False):
     """ returns all translatable fields in a model (including superclasses ones) """
@@ -74,8 +77,9 @@ def default_value(field):
         elif getattr(self, attname(locale[:2]), None):
             result = getattr(self, attname(locale[:2]))
         else:
-            default_language = fallback_language()
-            result = getattr(self, attname(default_language), None)
+            default_language = fallback_locale()
+            result = getattr(self, attname(default_language),
+                             getattr(self, attname(default_language[:2])))
         return result
 
     return default_value_func
@@ -106,6 +110,39 @@ class TransMeta(models.base.ModelBase):
         if 'Meta' in attrs and hasattr(attrs['Meta'], 'translate'):
             fields = attrs['Meta'].translate
             delattr(attrs['Meta'], 'translate')
+
+            if not isinstance(fields, tuple):
+                raise ImproperlyConfigured("Meta's translate attribute must be a tuple")
+
+            default_language = fallback_language()
+
+            for field in fields:
+                if not field in attrs or\
+                   not isinstance(attrs[field], models.fields.Field):
+                    raise ImproperlyConfigured(
+                        "There is no field %(field)s in model %(name)s, "\
+                        "as specified in Meta's translate attribute" %\
+                        dict(field=field, name=name))
+                original_attr = attrs[field]
+                for lang in get_languages():
+                    lang_code = lang[LANGUAGE_CODE]
+                    lang_attr = copy.copy(original_attr)
+                    lang_attr.original_fieldname = field
+                    lang_attr_name = get_real_fieldname(field, lang_code)
+                    if lang_code != default_language:
+                        # only will be required for default language
+                        if not lang_attr.null and lang_attr.default is NOT_PROVIDED:
+                            lang_attr.null = True
+                        if not lang_attr.blank:
+                            lang_attr.blank = True
+                    lang_attr.verbose_name = LazyString(field, lang_attr, lang_code)
+                    attrs[lang_attr_name] = lang_attr
+                del attrs[field]
+                attrs[field] = property(default_value(field))
+
+            new_class = super(TransMeta, cls).__new__(cls, name, bases, attrs)
+            if hasattr(new_class, '_meta'):
+                new_class._meta.translatable_fields = fields
         else:
             new_class = super(TransMeta, cls).__new__(cls, name, bases, attrs)
             # we inherits possible translatable_fields from superclasses
@@ -116,40 +153,7 @@ class TransMeta(models.base.ModelBase):
                 if hasattr(base._meta, 'translatable_fields'):
                     translatable_fields.extend(list(base._meta.translatable_fields))
             new_class._meta.translatable_fields = tuple(translatable_fields)
-            return new_class
 
-        if not isinstance(fields, tuple):
-            raise ImproperlyConfigured("Meta's translate attribute must be a tuple")
-
-        default_language = fallback_language()
-
-        for field in fields:
-            if not field in attrs or \
-               not isinstance(attrs[field], models.fields.Field):
-                    raise ImproperlyConfigured(
-                        "There is no field %(field)s in model %(name)s, "\
-                        "as specified in Meta's translate attribute" % \
-                        dict(field=field, name=name))
-            original_attr = attrs[field]
-            for lang in get_languages():
-                lang_code = lang[LANGUAGE_CODE]
-                lang_attr = copy.copy(original_attr)
-                lang_attr.original_fieldname = field
-                lang_attr_name = get_real_fieldname(field, lang_code)
-                if lang_code != default_language:
-                    # only will be required for default language
-                    if not lang_attr.null and lang_attr.default is NOT_PROVIDED:
-                        lang_attr.null = True
-                    if not lang_attr.blank:
-                        lang_attr.blank = True
-                lang_attr.verbose_name = LazyString(field, lang_attr, lang_code)
-                attrs[lang_attr_name] = lang_attr
-            del attrs[field]
-            attrs[field] = property(default_value(field))
-
-        new_class = super(TransMeta, cls).__new__(cls, name, bases, attrs)
-        if hasattr(new_class, '_meta'):
-            new_class._meta.translatable_fields = fields
         return new_class
 
 
