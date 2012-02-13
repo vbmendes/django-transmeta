@@ -16,6 +16,12 @@ class TrasMetaMetaClassTestCase(TestCase):
     def test_field_for_portuguese_were_created(self):
         self.assertIsFieldPresent('i18n_field_pt_BR', TestModel)
 
+    def test_original_field_name_for_i18n_field_en_should_retrieve_i18n_field(self):
+        self.assertEqual('i18n_field', TestModel._meta.get_field('i18n_field_en').original_fieldname)
+
+    def test_original_field_name_for_i18n_field_pt_BR_should_retrieve_i18n_field(self):
+        self.assertEqual('i18n_field', TestModel._meta.get_field('i18n_field_pt_BR').original_fieldname)
+
     def test_field_for_english_verbose_name_should_be_the_verbose_name_with_the_language_name(self):
         self.assertEqual('i18n field english', unicode(TestModel._meta.get_field('i18n_field_en').verbose_name))
 
@@ -25,4 +31,3 @@ class TrasMetaMetaClassTestCase(TestCase):
         self.assertEqual('value', obj.i18n_field)
         activate('pt-br')
         self.assertEqual('valor', obj.i18n_field)
-
