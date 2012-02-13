@@ -6,8 +6,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.forms.forms import pretty_name
 from django.utils.datastructures import SortedDict
-from django.utils.translation import get_language, to_locale
-from django.utils.functional import lazy
+from django.utils.translation import get_language
 
 LANGUAGE_CODE = 0
 LANGUAGE_NAME = 1
