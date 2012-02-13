@@ -29,7 +29,7 @@ if not settings.configured:
         LANGUAGE='en',
         LANGUAGES=(
             ('en', 'English'),
-            ('pt_BR', 'Portuguese'),
+            ('pt-br', 'Portuguese'),
         )
     )
 

@@ -3,6 +3,8 @@
 from django.utils.translation import activate
 from django.test import TestCase
 
+from transmeta import get_field_language
+
 from testapp.models import TestModel, InheritedTestModel
 
 class TrasMetaMetaClassTestCase(TestCase):
@@ -14,19 +16,19 @@ class TrasMetaMetaClassTestCase(TestCase):
         self.assertIsFieldPresent('i18n_field_en', TestModel)
 
     def test_field_for_portuguese_was_created(self):
-        self.assertIsFieldPresent('i18n_field_pt_BR', TestModel)
+        self.assertIsFieldPresent('i18n_field_pt_br', TestModel)
 
     def test_original_field_name_for_i18n_field_en_should_retrieve_i18n_field(self):
         self.assertEqual('i18n_field', TestModel._meta.get_field('i18n_field_en').original_fieldname)
 
     def test_original_field_name_for_i18n_field_pt_BR_should_retrieve_i18n_field(self):
-        self.assertEqual('i18n_field', TestModel._meta.get_field('i18n_field_pt_BR').original_fieldname)
+        self.assertEqual('i18n_field', TestModel._meta.get_field('i18n_field_pt_br').original_fieldname)
 
     def test_field_for_english_verbose_name_should_be_the_verbose_name_with_the_language_name(self):
         self.assertEqual('i18n field english', unicode(TestModel._meta.get_field('i18n_field_en').verbose_name))
 
     def test_field_without_language_defined_should_respect_the_active_language(self):
-        obj = TestModel(i18n_field_en='value', i18n_field_pt_BR='valor')
+        obj = TestModel(i18n_field_en='value', i18n_field_pt_br='valor')
         activate('en')
         self.assertEqual('value', obj.i18n_field)
         activate('pt-br')
@@ -43,3 +45,5 @@ class TrasMetaMetaClassTestCase(TestCase):
     def test_field_for_english_was_created_in_inherited_model(self):
         self.assertIsFieldPresent('i18n_field_en', InheritedTestModel)
 
+    def test_get_field_i18n_field_en_language_is_en(self):
+        self.assertEqual('en', TestModel._meta.get_field('i18n_field_en').language)

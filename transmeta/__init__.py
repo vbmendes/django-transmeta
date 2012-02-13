@@ -19,13 +19,14 @@ def get_languages():
 
 def get_real_fieldname(field, lang=None):
     if lang is None:
-        lang = to_locale(get_language()) # both 'en-US' and 'en' -> 'en'
+        lang = get_language()
+    lang = lang.replace('-', '_')
     return str('%s_%s' % (field, lang))
 
 
-def get_field_language(real_field):
+def get_field_language(db_field):
     """ return language for a field. i.e. returns "en" for "name_en" """
-    return real_field.split('_')[1]
+    return db_field.language
 
 
 def get_fallback_fieldname(field, lang=None):
@@ -46,9 +47,6 @@ def fallback_language():
     """ returns fallback language """
     return getattr(settings, 'TRANSMETA_DEFAULT_LANGUAGE', \
                    settings.LANGUAGE_CODE)
-
-def fallback_locale():
-    return to_locale(fallback_language())
 
 
 def get_all_translatable_fields(model, model_trans_fields=None, column_in_current_table=False):
@@ -71,13 +69,13 @@ def default_value(field):
 
     def default_value_func(self):
         attname = lambda x: get_real_fieldname(field, x)
-        locale = to_locale(get_language())
+        locale = get_language()
         if getattr(self, attname(locale), None):
             result = getattr(self, attname(locale))
         elif getattr(self, attname(locale[:2]), None):
             result = getattr(self, attname(locale[:2]))
         else:
-            default_language = fallback_locale()
+            default_language = fallback_language()
             result = getattr(self, attname(default_language),
                              getattr(self, attname(default_language[:2])))
         return result
@@ -128,6 +126,7 @@ class TransMeta(models.base.ModelBase):
                     lang_code = lang[LANGUAGE_CODE]
                     lang_attr = copy.copy(original_attr)
                     lang_attr.original_fieldname = field
+                    lang_attr.language = lang_code
                     lang_attr_name = get_real_fieldname(field, lang_code)
                     if lang_code != default_language:
                         # only will be required for default language
@@ -155,6 +154,7 @@ class TransMeta(models.base.ModelBase):
             new_class._meta.translatable_fields = tuple(translatable_fields)
 
         return new_class
+
 
 
 class LazyString(object):
