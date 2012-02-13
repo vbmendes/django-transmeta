@@ -26,7 +26,7 @@ if not settings.configured:
         ROOT_URLCONF='',
         DEBUG=False,
         SITE_ID=1,
-        LANGUAGE='en',
+        LANGUAGE_CODE='en',
         LANGUAGES=(
             ('en', 'English'),
             ('pt-br', 'Portuguese'),
