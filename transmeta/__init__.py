@@ -23,11 +23,6 @@ def get_real_fieldname(field, lang=None):
     return str('%s_%s' % (field, lang))
 
 
-def get_field_verbose_name(fieldname, field, lang=None):
-    verbose_name = field.verbose_name or pretty_name(unicode(fieldname))
-    return verbose_name + ' ' + dict(settings.LANGUAGES)[lang]
-
-
 def get_field_language(real_field):
     """ return language for a field. i.e. returns "en" for "name_en" """
     return real_field.split('_')[1]
@@ -147,7 +142,7 @@ class TransMeta(models.base.ModelBase):
                         lang_attr.null = True
                     if not lang_attr.blank:
                         lang_attr.blank = True
-                lang_attr.verbose_name = get_field_verbose_name(field, lang_attr, lang_code)
+                lang_attr.verbose_name = LazyString(field, lang_attr, lang_code)
                 attrs[lang_attr_name] = lang_attr
             del attrs[field]
             attrs[field] = property(default_value(field))
@@ -160,10 +155,12 @@ class TransMeta(models.base.ModelBase):
 
 class LazyString(object):
 
-    def __init__(self, proxy, lang):
-        self.proxy = proxy
+    def __init__(self, fieldname, field, lang):
+        self.fieldname = fieldname
+        self.original_verbose_name = field.verbose_name
         self.lang = lang
 
     def __unicode__(self):
-        return u'%s %s' % (self.proxy, self.lang)
-
+        original_verbose_name = self.original_verbose_name or pretty_name(unicode(self.fieldname))
+        verbose_name = u'%s %s' % (original_verbose_name, dict(settings.LANGUAGES)[self.lang])
+        return verbose_name.lower()
