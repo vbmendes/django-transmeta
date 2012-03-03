@@ -3,9 +3,8 @@
 from django.utils.translation import activate
 from django.test import TestCase
 
-from transmeta import get_field_language
-
 from testapp.models import TestModel, InheritedTestModel
+
 
 class TrasMetaMetaClassTestCase(TestCase):
 
@@ -47,3 +46,11 @@ class TrasMetaMetaClassTestCase(TestCase):
 
     def test_get_field_i18n_field_en_language_is_en(self):
         self.assertEqual('en', TestModel._meta.get_field('i18n_field_en').language)
+
+    def test_get_empty_i18n_field_is_an_empty_string(self):
+        obj = TestModel(i18n_field_en='')
+        self.assertEqual('', obj.i18n_field)
+
+    def test_fallback_language_is_used_when_trying_to_get_field_that_is_empty_in_active_language(self):
+        obj = TestModel(i18n_field_en='value', i18n_field_pt_br='')
+        self.assertEqual('value', obj.i18n_field)

@@ -39,7 +39,7 @@ def get_real_fieldname_in_each_language(field):
 
 def canonical_fieldname(db_field):
     """ all "description_en", "description_fr", etc. field names will return "description" """
-    return getattr(db_field, 'original_fieldname', db_field.name) # original_fieldname is set by transmeta
+    return getattr(db_field, 'original_fieldname', db_field.name)  # original_fieldname is set by transmeta
 
 
 def fallback_language():
@@ -71,12 +71,9 @@ def default_value(field):
         locale = get_language()
         if getattr(self, attname(locale), None):
             result = getattr(self, attname(locale))
-        elif getattr(self, attname(locale[:2]), None):
-            result = getattr(self, attname(locale[:2]))
         else:
             default_language = fallback_language()
-            result = getattr(self, attname(default_language),
-                             getattr(self, attname(default_language[:2])))
+            result = getattr(self, attname(default_language), None)
         return result
 
     return default_value_func
